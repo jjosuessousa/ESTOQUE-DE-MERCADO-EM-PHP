@@ -4,6 +4,9 @@ require_once 'Produto.php';
 
 $produto = new Produto($pdo);
 
+// Verifica se há uma mensagem na URL e exibe na tela
+$mensagem = isset($_GET['mensagem']) ? $_GET['mensagem'] : '';
+
 // Processar o formulário de criação
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao']) && $_POST['acao'] === 'cadastrar') {
     $nome = $_POST['nome'];
@@ -11,11 +14,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao']) && $_POST['ac
     $preco = $_POST['preco'];
     $estoque = $_POST['estoque'];
 
-    // Verifique se a criação do produto foi bem-sucedida
+    // Verifica se a criação do produto foi bem-sucedida
     if ($produto->criar($nome, $descricao, $preco, $estoque)) {
-        echo "Produto cadastrado com sucesso!";
+        header("Location: index.php?mensagem=" . urlencode("Produto cadastrado com sucesso!"));
+        exit;
     } else {
-        echo "Erro ao cadastrar produto.";
+        header("Location: index.php?mensagem=" . urlencode("Erro ao cadastrar produto."));
+        exit;
     }
 }
 
@@ -34,7 +39,13 @@ $produtos = $produto->listar();
 <body>
 
 <div class="container mt-4">
+
     <h2>Cadastro de Produtos</h2>
+
+    <!-- Exibir mensagem de sucesso ou erro -->
+    <?php if (!empty($mensagem)): ?>
+        <div class="alert alert-success"><?= htmlspecialchars($mensagem) ?></div>
+    <?php endif; ?>
 
     <!-- Formulário de Cadastro -->
     <form method="POST">
