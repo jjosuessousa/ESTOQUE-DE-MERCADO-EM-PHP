@@ -1,39 +1,41 @@
 <?php
-// Ativar exibição de erros
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+require_once 'conexao.php';
+require_once 'Produto.php';
 
-include 'config.php';
+$produto = new Produto($pdo);
 
-// Verifica se um ID foi passado na URL
-if (!isset($_GET['id']) || empty($_GET['id'])) {
-    die("ID do produto não informado.");
+// Verifica se o id foi passado pela URL
+if (isset($_GET['id'])) {
+    $id = $_GET['id'];
+
+    // Buscar as informações do produto
+    $stmt = $pdo->prepare("SELECT * FROM produtos WHERE id = :id");
+    $stmt->bindParam(':id', $id);
+    $stmt->execute();
+    $produtoInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Verifica se o produto foi encontrado
+    if (!$produtoInfo) {
+        die('Produto não encontrado.');
+    }
+} else {
+    die('ID não informado.');
 }
 
-$id = $_GET['id'];
-
-// Busca o produto no banco de dados
-$stmt = $pdo->prepare("SELECT * FROM produtos WHERE id = ?");
-$stmt->execute([$id]);
-$produto = $stmt->fetch(PDO::FETCH_ASSOC);
-
-// Se o produto não for encontrado
-if (!$produto) {
-    die("Produto não encontrado.");
-}
-
-// Atualizar produto se o formulário for enviado
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+// Processar a atualização do produto
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = $_POST['nome'];
     $descricao = $_POST['descricao'];
     $preco = $_POST['preco'];
     $estoque = $_POST['estoque'];
 
-    $stmt = $pdo->prepare("UPDATE produtos SET nome = ?, descricao = ?, preco = ?, estoque = ? WHERE id = ?");
-    $stmt->execute([$nome, $descricao, $preco, $estoque, $id]);
-
-    header("Location: index.php");
-    exit;
+    if ($produto->editar($id, $nome, $descricao, $preco, $estoque)) {
+        echo "Produto atualizado com sucesso!";
+        header('Location: index.php'); // Redireciona de volta para a lista
+        exit;
+    } else {
+        echo "Erro ao atualizar produto.";
+    }
 }
 ?>
 
@@ -43,27 +45,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Produto</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="container mt-5">
+<body>
 
+<div class="container mt-4">
     <h2>Editar Produto</h2>
+
     <form method="POST">
-        <label>Nome:</label>
-        <input type="text" name="nome" class="form-control" value="<?= htmlspecialchars($produto['nome']) ?>" required>
-
-        <label>Descrição:</label>
-        <textarea name="descricao" class="form-control" required><?= htmlspecialchars($produto['descricao']) ?></textarea>
-
-        <label>Preço:</label>
-        <input type="number" step="0.01" name="preco" class="form-control" value="<?= $produto['preco'] ?>" required>
-
-        <label>Estoque:</label>
-        <input type="number" name="estoque" class="form-control" value="<?= $produto['estoque'] ?>" required>
-
-        <button type="submit" class="btn btn-primary mt-3">Salvar Alterações</button>
-        <a href="index.php" class="btn btn-secondary mt-3">Cancelar</a>
+        <div class="form-group">
+            <label for="nome">Nome do Produto</label>
+            <input type="text" class="form-control" name="nome" id="nome" value="<?= $produtoInfo['nome'] ?>" required>
+        </div>
+        <div class="form-group">
+            <label for="descricao">Descrição</label>
+            <textarea class="form-control" name="descricao" id="descricao" required><?= $produtoInfo['descricao'] ?></textarea>
+        </div>
+        <div class="form-group">
+            <label for="preco">Preço</label>
+            <input type="number" step="0.01" class="form-control" name="preco" id="preco" value="<?= $produtoInfo['preco'] ?>" required>
+        </div>
+        <div class="form-group">
+            <label for="estoque">Estoque</label>
+            <input type="number" class="form-control" name="estoque" id="estoque" value="<?= $produtoInfo['estoque'] ?>" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Atualizar</button>
     </form>
+
+    <a href="index.php" class="btn btn-secondary mt-4">Voltar</a>
+</div>
 
 </body>
 </html>
