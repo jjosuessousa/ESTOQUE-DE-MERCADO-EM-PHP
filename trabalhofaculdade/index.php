@@ -1,11 +1,22 @@
 <?php
 require_once 'conexao.php';
 require_once 'Produto.php';
+//O conexao.php contém a configuração do banco de dados via PDO.
+//O Produto.php contém a classe Produto, que possui os métodos para criar, listar, editar e excluir produtos.
+
+
 
 $produto = new Produto($pdo);
+//Instancia a classe Produto, passando a conexão PDO para que os métodos da classe possam acessar o banco.
 
-// Verifica se há uma mensagem na URL e exibe na tela
+
+
+
 $mensagem = isset($_GET['mensagem']) ? $_GET['mensagem'] : '';
+//Verifica se há uma mensagem passada pela URL (via GET) e a armazena na variável $mensagem.
+//Isso permite exibir mensagens de sucesso ou erro na tela.
+
+
 
 // Processar o formulário de criação
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao']) && $_POST['acao'] === 'cadastrar') {
@@ -22,11 +33,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao']) && $_POST['ac
         header("Location: index.php?mensagem=" . urlencode("Erro ao cadastrar produto."));
         exit;
     }
-}
+}           //Verifica se o formulário foi submetido via POST.
+            //Recebe os dados do formulário (nome, descricao, preco, estoque).
+            //Chama o método criar() da classe Produto para inserir o novo produto no banco.
+            //Redireciona para index.php com uma mensagem de sucesso ou erro.
 
-// Listar produtos
+
+
+// //Chama o método listar() da classe Produto,
+// que retorna um array de produtos cadastrados no banco.
 $produtos = $produto->listar();
-?>
+?>  
+
+
+
+
+
+
 
 <!DOCTYPE html>
 <html lang="pt-br">
